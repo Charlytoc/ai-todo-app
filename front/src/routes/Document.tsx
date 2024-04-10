@@ -22,8 +22,10 @@ const defaultTodo = {
 
 export default function Document() {
   const { id } = useLoaderData() as LoaderData;
+
   const { socket } = useStore((state) => ({ socket: state.socket }));
   const [todo, setTodo] = useState(defaultTodo as TTodo);
+  
   useEffect(() => {
     socket.on(`todo_${id}`, (data: any) => {
       setTodo(data);

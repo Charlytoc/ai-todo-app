@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import fs from 'fs';
 import { Server as SocketIO } from 'socket.io';
 import http from 'http';
 import { db } from './db.js';

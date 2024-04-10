@@ -2,27 +2,29 @@ import OpenAI from 'openai';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Initialize OpenAI with the API key from environment variables
 const openai = new OpenAI({
     apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
 });
 
-
+// Define actions that can be executed within the application
 const actions = {
     ask: `
     ACTION: ASK
 
     ACTION PARAMETERS: string[]
-    PARAMETERS_EXPLANATION: Each variable slug is a string that represents the variable name that you want to ask the user for. For exameple: ["title", "description"]
+    PARAMETERS_EXPLANATION: Each variable slug is a string that represents the variable name that you want to ask the user for. For example: ["title", "description"]
 
     DESCRIPTION: When you need information from the user, you display inputs to let the user provide the needed information. 
     RULES: Never ask more than 2 questions at a time. Always give a version of the todo before asking for information.
     EXECUTION: 
     __action:ask__
-    ["some_variable_name]
+    ["some_variable_name"]
     __action_end__
     `,
 }
 
+// System prompt that guides the AI on how to interact with the user
 const system_prompt = `
  Your are a friendly AI working in the backend of a Todo's application.
 
@@ -33,6 +35,7 @@ const system_prompt = `
 
  """
  ${actions.ask}
+
  """
 
  You must always **provide a version** of the todo, and then **execute actions** if needed.
@@ -62,9 +65,10 @@ const system_prompt = `
     __action_end__
  """
 
- Always answer in the user's language
+ Always answer in the user's language. Also, the questions that you make, should be in the user's language.
 `
 
+// Function to remove a specific section from a string
 function removeSectionFromString(inputString, startSubstring, stopSubstring) {
     const startIndex = inputString.indexOf(startSubstring);
     const stopIndex = inputString.indexOf(stopSubstring, startIndex);
@@ -72,13 +76,12 @@ function removeSectionFromString(inputString, startSubstring, stopSubstring) {
     if (startIndex === -1 || stopIndex === -1) {
         return inputString; // Substrings not found, return original string
     }
-
     // Remove section from start to end of stop substring
     return inputString.slice(0, startIndex) + inputString.slice(stopIndex + stopSubstring.length);
 }
 
+// Function to extract action arguments from a string
 function extractActionArguments(inputString) {
-    // console.log(inputString);
     // Check if action tags are present
     if (!inputString.includes('__action:') || !inputString.includes('__action_end__')) {
         return { actionName: null, actionArgs: null, withoutAction: inputString }; // No action needed
@@ -89,16 +92,17 @@ function extractActionArguments(inputString) {
 
     // Extract content inside the action tags
     const actionArgs = inputString.split(`__action:${actionName}__`)[1].split('__action_end__')[0].trim();
-    // console.log(actionArgs);
+
     // Remove the action section from the input string
     const withoutAction = removeSectionFromString(inputString, '__action:', '__action_end__');
 
     return { actionName, actionArgs, withoutAction };
 }
 
-
+// Async function to get a draft response from the AI based on the user's todo
 const getDraftFromAI = async ({ title, draft, inputsObject }) => {
 
+    // Construct the prompt for the AI
     const prompt = `
     The title of the todo is: ${title}
     This is the current draft: 
@@ -111,6 +115,7 @@ const getDraftFromAI = async ({ title, draft, inputsObject }) => {
     """
     `
 
+    // Create a chat completion with OpenAI
     const chatCompletion = await openai.chat.completions.create({
         messages: [
             {
@@ -120,8 +125,11 @@ const getDraftFromAI = async ({ title, draft, inputsObject }) => {
             { role: 'user', content: prompt }],
         model: 'gpt-4-vision-preview',
         max_tokens: 2000,
+        stream: false,
     });
+    // Extract the AI's message from the response
     const aiMessage = chatCompletion["choices"][0]["message"]["content"]
+    // Return the extracted action arguments from the AI's message
     return extractActionArguments(aiMessage)
 }
 

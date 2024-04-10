@@ -110,19 +110,26 @@ main.todo {
     background-color: rgba(90, 88, 88, 0.12);
     padding: 2px;
     overflow-x: auto;
+    > *:not(span) {
+      margin-top: 10px;
+    }
     &.small {
       max-height: 200px;
       overflow-y: auto;
     }
-    > code {
+     code {
       overflow-x: auto;
+      color: rgb(255, 255, 254);
+    }
+    pre {
+      padding: 5px;
+      background-color: rgb(0, 0, 0);
+      border-radius: 10px;
+    }
+    > p {
+      margin-top: 20 px;
     }
   }
-  /* > .difficulty-block {
-    width: 10px;
-    height: 10px;
-    
-  } */
 }
 
 .buttons-container {

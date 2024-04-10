@@ -43,17 +43,20 @@ interface TodoProps extends TTodo {
 }
 
 export default function Todos() {
+
   const [todos, setTodos] = useState([] as TTodo[]);
   const { socket } = useStore((state) => ({ socket: state.socket }));
   console.log("Todos component");
 
   useEffect(() => {
     socket.on("todos", (data: TTodo[]) => {
+      console.log(data, "received todos");
+      
       setTodos(data);
     });
 
     socket.on("connect", () => {
-      console.log("Connected to socket!");
+      // console.log("Connected to socket!");
     });
 
     socket.emit("get", "todos");
@@ -124,7 +127,8 @@ export const TodoComponent = ({
   mode,
 }: TodoProps) => {
   const [inputs, setInputs] = useState([...defaultInputs] as string[]);
-
+  console.log("Todo component being rendered", draft);
+  
   // useRef
   const formRef = useRef(null as any);
   // With this I can controle the frontend actions
@@ -180,6 +184,9 @@ export const TodoComponent = ({
     navigator.clipboard.writeText(first);
     toast.success("Draft copied to clipboard", { duration: 2000 });
   };
+
+  console.log("First part of the draft", first);
+  
   return (
     <div className={`todo-component ${difficulty}`}>
       <h3>{title}</h3>
